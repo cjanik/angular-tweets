@@ -69,6 +69,12 @@ module.exports = function makeWebpackConfig () {
     config.devtool = 'eval-source-map';
   }
 
+  config.devServer = {
+    // proxy calls to api to our own node server backend
+    proxy: {
+      '/ws/*': 'http://localhost:5060/'
+    }
+  };
   /**
    * Loaders
    * Reference: http://webpack.github.io/docs/configuration.html#module-loaders
@@ -197,10 +203,10 @@ module.exports = function makeWebpackConfig () {
    * Reference: http://webpack.github.io/docs/configuration.html#devserver
    * Reference: http://webpack.github.io/docs/webpack-dev-server.html
    */
-  config.devServer = {
-    contentBase: './src/public',
-    stats: 'minimal'
-  };
+  // config.devServer = {
+  //   contentBase: './src/public',
+  //   stats: 'minimal'
+  // };
 
   return config;
 }();

@@ -1,4 +1,10 @@
 import angular from 'angular';
+import client from 'websocket';
+import uirouter from 'angular-ui-router';
+import routing from './app.config';
+import bars from './bars';
+
+var ws = new client.w3cwebsocket('ws://localhost:5060/');
 
 import '../style/app.css';
 
@@ -12,14 +18,12 @@ let app = () => {
 
 class AppCtrl {
   constructor() {
-    this.url = 'https://github.com/preboot/angular-webpack';
+    // this.url = 'https://github.com/cjanik/angular-tweets';
   }
 }
 
-const MODULE_NAME = 'app';
-
-angular.module(MODULE_NAME, [])
+export default angular.module('app', [uirouter, bars])
+  .config(routing)
   .directive('app', app)
-  .controller('AppCtrl', AppCtrl);
-
-export default MODULE_NAME;
+  .controller('AppCtrl', AppCtrl)
+  .name;

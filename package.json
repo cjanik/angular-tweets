@@ -4,7 +4,7 @@
   "description": "A workflow for Angular made with Webpack",
   "scripts": {
     "build": "rimraf dist && webpack --bail --progress --profile",
-    "server": "webpack-dev-server --history-api-fallback --inline --progress",
+    "dev": "nodemon src/server/index.js --watch src/server & webpack-dev-server --hot --history-api-fallback --inline --progress",
     "test": "karma start",
     "test-watch": "karma start --auto-watch --no-single-run",
     "start": "npm run server"
@@ -20,7 +20,13 @@
   },
   "homepage": "https://github.com/Foxandxss/angular-webpack-workflow",
   "dependencies": {
-    "angular": "^1.5.0"
+    "angular": "^1.5.5",
+    "angular-ui-router": "^0.3.0",
+    "compression": "^1.6.2",
+    "d3": "^3.5.17",
+    "express": "^4.13.4",
+    "twitter-stream-channels": "^1.0.0",
+    "websocket": "^1.0.22"
   },
   "devDependencies": {
     "angular-mocks": "^1.5.0",
@@ -43,6 +49,7 @@
     "karma-spec-reporter": "0.0.26",
     "karma-webpack": "^1.7.0",
     "node-libs-browser": "^1.0.0",
+    "nodemon": "^1.9.2",
     "null-loader": "^0.1.1",
     "phantomjs-prebuilt": "^2.1.4",
     "postcss-loader": "^0.8.0",
