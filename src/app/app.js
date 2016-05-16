@@ -11,7 +11,6 @@ let app = () => {
     template: require('./app.html'),
     controller: 'AppCtrl',
     controllerAs: 'app',
-    scope: {}
   }
 };
 
@@ -19,6 +18,10 @@ class AppCtrl {
   constructor($scope) {
     this.$scope = $scope
     this.connect();
+
+    $scope.search = () => {
+      console.log('time to open the stream.');
+    }
   }
 
   connect() {
