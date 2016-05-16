@@ -22,11 +22,16 @@
   "dependencies": {
     "angular": "^1.5.5",
     "angular-ui-router": "^0.3.0",
+    "bufferutil": "^1.2.1",
     "compression": "^1.6.2",
     "d3": "^3.5.17",
     "express": "^4.13.4",
-    "twitter-stream-channels": "^1.0.0",
-    "websocket": "^1.0.22"
+    "fs": "0.0.2",
+    "http": "0.0.0",
+    "json-loader": "^0.5.4",
+    "socket.io": "^1.4.6",
+    "tls": "0.0.1",
+    "twitter-stream-channels": "^1.0.0"
   },
   "devDependencies": {
     "angular-mocks": "^1.5.0",

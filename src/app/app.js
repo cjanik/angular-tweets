@@ -1,10 +1,8 @@
 import angular from 'angular';
-import client from 'websocket';
+import io from 'socket.io-client';
 import uirouter from 'angular-ui-router';
 import routing from './app.config';
 import bars from './bars';
-
-var ws = new client.w3cwebsocket('ws://localhost:5060/');
 
 import '../style/app.css';
 
@@ -12,18 +10,35 @@ let app = () => {
   return {
     template: require('./app.html'),
     controller: 'AppCtrl',
-    controllerAs: 'app'
+    controllerAs: 'app',
+    scope: {}
   }
 };
 
 class AppCtrl {
-  constructor() {
-    // this.url = 'https://github.com/cjanik/angular-tweets';
+  constructor($scope) {
+    this.$scope = $scope
+    this.connect();
+  }
+
+  connect() {
+    let socket = io('http://localhost:5080'),
+      socketCallback = () => {
+        this.$scope.socket = this.$scope.data;
+        socket.emit('my other event', { my: 'data' });
+      };
+
+    socket.on('news', (data) => {
+      this.$scope.data = data;
+      this.$scope.$apply(socketCallback);
+    });
   }
 }
+
+AppCtrl.$inject = ['$scope'];
 
 export default angular.module('app', [uirouter, bars])
   .config(routing)
   .directive('app', app)
-  .controller('AppCtrl', AppCtrl)
+  .controller('AppCtrl', ['$scope', AppCtrl])
   .name;
