@@ -7,8 +7,9 @@
       <div class="sub header">The most retweeted tweets will accumulate in the bar chart</div>
       </div>
     </div>
+    <p>{{socket}}</p>
     <div class="ui input">
-      <form class="input-params" ng-submit="search()">
+      <form class="input-params" ng-submit="search($event)">
         Enter search term: <input type="text" name="track" placeholder="words">
       </form>
     </div>
