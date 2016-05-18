@@ -1,3 +1,5 @@
+'use strict'
+
 var TwitterStreamChannels = require('twitter-stream-channels'),
     credentials = require('./twitter.json'),
     Twit = new TwitterStreamChannels(credentials),
@@ -7,6 +9,7 @@ var TwitterStreamChannels = require('twitter-stream-channels'),
     io = require('socket.io')(server);
 
 var channels = {},
+    clients = {},
     lastUpdated = (new Date).getTime(),
     rateLimit = false,
     lang = 'en',
@@ -28,33 +31,39 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('subscribeClient', (track, language, tempId) => {
+    socket.on('subscribeClient', (data) => {
 
-        console.log('subscribeClient: ', this.subscriptionId);
+        console.log('input: ', data.input, ' clientId: ', data.clientId);
 
-        var subId = this.subscriptionId.toString();
+        io.of('/' + data.clientId)
+            .emit('subscribed', { ID: socket.id })
+            .close();
 
-        socket.emit('subscribed' + tempId, subId);
+        clients[socket.id] = io.of('/' + socket.id);
 
-        lang = language;
+        console.log('socket assigned id: ', socket.id);
 
-        addToTrack(subId, track);
+        addToTrack(socket.id, data.input);
 
-        tweetStream.on('channels/' + subId, (twt) => {
-            setListener( twt, subId, track);
+        tweetStream.on('channels/' + socket.id, (twt) => {
+            setListener( twt, socket.id, data.input);
         });
 
         tweetStream.on('error', (error) => {
-            serverStream.emit('error', error);
+            clients[socket.id].emit('error', error);
             console.log('error: ', error);
         });
 
+    });
+
+    socket.on('error', (err) => {
+        console.log('uh oh: ', err);
     });
 });
 
 function setListener(twt, client, track){
     if(twt.retweeted_status){
-      serverStream.emit(client, track, twt.id_str, twt.retweeted_status.id_str, twt.text, twt.retweeted_status.retweet_count);
+      clients[client].emit(track, twt.id_str, twt.retweeted_status.id_str, twt.text, twt.retweeted_status.retweet_count);
     }
 }
 
@@ -70,13 +79,13 @@ function updateTwit(){
         console.log('now: ', now, ' lastUpdated: ', lastUpdated);
 
     if (now - lastUpdated > 5000 && rateLimit === false) {
-        tweetStream = Twit.streamChannels( {track: channels, language: lang} );
+        tweetStream = Twit.streamChannels( {track: channels, language: 'en'} );
         console.log('updated, no rateLimit: ', now - lastUpdated);
         lastUpdated = now;
         updated = true;
-    } else if (rateLimit === true || now - lastUpdated > 60000) {
+    } else if (rateLimit === true && now - lastUpdated > 60000) {
 
-        tweetStream = Twit.streamChannels( {track: channels, language: lang} );
+        tweetStream = Twit.streamChannels( {track: channels, language: 'en'} );
         console.log('updated, after rateLimit', now - lastUpdated);
         lastUpdated = now;
         rateLimit = false;

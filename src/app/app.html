@@ -11,6 +11,8 @@
     <div class="ui input">
       <form class="input-params" ng-submit="search($event)">
         Enter search term: <input type="text" name="track" placeholder="words">
+        <p ng-show="inputError">{{inputError}}</p>
+        <p ng-show="waitingMsg">{{waitingMsg}}</p>
       </form>
     </div>
   </header>
