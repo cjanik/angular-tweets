@@ -45,22 +45,27 @@ function subscribeHandler(data) {
   let socket = this;
   socket.emit('subscribed' + data.clientId, { data: 'success' });
 
-  setTimeout(() => {
+  setInterval(() => {
     console.log('emitting test on: ', data.input);
-    socket.emit(data.input, {data: 'oh shit'});
-  }, 5000);
+    socket.emit(data.input, {
+      tweetId: Math.floor(Math.random()*300).toString(),
+      retweetId: Math.floor(Math.random()*50).toString(),
+      text: "just another test",
+      retweetCount: Math.floor(Math.random()*100)
+    });
+  }, 500);
 
-  addToTrack(data.clientId, data.input);
+  // addToTrack(data.clientId, data.input);
 
-  tweetStream.on('channels/' + data.clientId, (twt) => {
-    setListener(socket, twt, data.input);
-  });
+  // tweetStream.on('channels/' + data.clientId, (twt) => {
+  //   setListener(socket, twt, data.input);
+  // });
 
-  tweetStream.on('error', (error) => {
+  // tweetStream.on('error', (error) => {
 
-    socket.emit('error', error);
-    console.log('error: ', error);
-  });
+  //   socket.emit('error', error);
+  //   console.log('error: ', error);
+  // });
 
 }
 
@@ -114,7 +119,7 @@ function updateTwit() {
 // close stream after 15 minutes
 var closeChecker = setInterval(() => {
   if ((new Date).getTime() - lastUpdated > 60 * 1000 * 15) {
-    tweetStream.close();
+    tweetStream.stop();
     clearInterval(closeChecker);
   }
 }, 60 * 1000);

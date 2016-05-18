@@ -2,7 +2,10 @@ import angular from 'angular';
 import io from 'socket.io-client';
 import uirouter from 'angular-ui-router';
 import routing from './app.config';
-import bars from './bars';
+// import bars from './bars';
+// import d3 from 'd3';
+import bars from './bars/bars.directive';
+
 import _ from 'lodash';
 
 import '../style/app.css';
@@ -28,7 +31,9 @@ class AppCtrl {
     $scope.collectionSize = 30;
     $scope.uuid = generateUuid();
     $scope.inputError = false;
-    $scope.topTweets = { count: 0 };
+    $scope.topTweets = {
+      count: 0
+    };
     this.$scope = $scope;
 
     this.connect();
@@ -42,9 +47,9 @@ class AppCtrl {
 
       if(input !== '') {
         $scope.inputError = false;
-        this.getTweets(input);
         this.$scope.query = input;
         event.target.track.value = '';
+        this.getTweets(input);
       } else {
         $scope.inputError = 'Need to enter a proper search term';
         console.log('Need to enter a proper search term');
@@ -76,7 +81,8 @@ class AppCtrl {
       // Retweets.remove({});
     }
     this.socket.emit('subscribeClient', { input: input, lang: 'en', clientId: this.$scope.uuid });
-    this.waitForSubscription();
+    // this.waitForSubscription();
+    this.listen();
     this.$scope.waitingMsg = "Not seeing much? Someone is bound to tweet about it eventually! Click a bar to see the tweet";
   }
 
@@ -91,28 +97,43 @@ class AppCtrl {
   listen(success) {
     console.log('listening for: ', this.$scope.query);
     this.socket.on(this.$scope.query, (tweet) => {
+
+      if (typeof this.$scope.topTweets.currentMinimum === 'undefined') {
+        this.$scope.topTweets.currentMinimum = tweet.retweetCount;
+        this.$scope.topTweets.minimumIndex = tweet.tweetId;
+      }
       // console.log(tweet);
-      if (tweet.retweetedCount > this.$scope.topTweets.currentMinimum || this.$scope.topTweets.count < this.$scope.collectionSize) {
+      if (tweet.retweetCount > this.$scope.topTweets.currentMinimum || this.$scope.topTweets.count < this.$scope.collectionSize) {
         let isDuplicate = _.find(this.$scope.topTweets, (dup) => {
           return dup.tweetId === tweet.tweetId;
         });
 
         if (isDuplicate) {
-          isDuplicate.retweetedCount = tweet.retweetedCount;
+          isDuplicate.retweetCount = tweet.retweetCount;
         } else {
-          this.$scope.topTweets[tweet.id] = tweet;
+          this.$scope.topTweets[tweet.tweetId] = tweet;
           this.$scope.topTweets.count++;
         }
 
+        // if (tweet.retweetCount < this.$scope.topTweets.minimumIndex) {
+        //   this.$scope.topTweets.minimumIndex = tweet.retweetCount;
+        // }
+
+
         if (this.$scope.topTweets.count > this.$scope.collectionSize) {
           delete this.$scope.topTweets[this.$scope.topTweets.minimumIndex];
-          let minTweet = _.min(this.$scope.topTweets, (min) => {
-            return min.retweetedCount;
+          let minTweet = _.minBy(this.$scope.topTweets, (min) => {
+            return min.retweetCount;
           });
           this.$scope.topTweets.minimumIndex = minTweet.tweetId;
-          this.$scope.topTweets.currentMinimum = minTweet.retweetedCount;
+          this.$scope.topTweets.currentMinimum = minTweet.retweetCount;
           this.$scope.topTweets.count--;
         }
+         // else if (!this.$scope.topTweets.currentMinimum) {
+        //   this.$scope.topTweets.minimumIndex = minTweet.tweetId;
+        //   this.$scope.topTweets.currentMinimum = minTweet.retweetCount;
+        // }
+        console.log(this.$scope.topTweets);
 
       }
     });
@@ -124,8 +145,10 @@ class AppCtrl {
 
 AppCtrl.$inject = ['$scope'];
 
-export default angular.module('app', [uirouter, bars])
+export default angular.module('app', [uirouter])
   .config(routing)
-  .directive('app', app)
   .controller('AppCtrl', ['$scope', AppCtrl])
+  .directive('app', app)
+  // .controller('BarsCtrl', BarsCtrl)
+  .directive('bars', bars)
   .name;

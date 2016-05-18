@@ -1,6 +1,7 @@
-export default class BarsController {
+export default class BarsCtrl {
   constructor() {
-    this.name = 'Bar Chart Controller';
-    this.id = 'barChart';
+    this.$scope.name = 'Bar Chart Controller';
+    this.$scope.id = 'barChart';
+    console.log('constructed', this.name);
   }
 }

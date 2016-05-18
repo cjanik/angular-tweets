@@ -1,12 +1,29 @@
 import d3 from 'd3';
 
-export default (d3) => {
+export default () => {
   return {
     restrict: 'EA',
     scope: {
         collection: '='
     },
     link: function(scope, element, attrs) {
+
+
+        let $window = angular.element($window);
+        $window.onresize = function() {
+            scope.$apply();
+        };
+
+        scope.$watch(function() {
+            return $window.innerWidth;
+        }, function() {
+            // responsivefy(svg);
+            scope.render(scope.data);
+        });
+
+        scope.$watch('data', function(newVals, oldVals) {
+            return scope.render(newVals);
+        }, true);
         //Width and height
         var w = 500;
         var h = 300;
@@ -22,19 +39,31 @@ export default (d3) => {
             return d._id;
         };
 
+        //Create SVG element
+        console.log('D3 Directive called!!');
+        var svg = d3.select('#barchart');
+
+        svg.attr("width", w)
+            .attr("height", (h + 80));
+
+        // svg.call(responsivefy);
+
+        console.log(svg);
+
         function responsivefy(svg) {
             // get container + svg aspect ratio
             var container = d3.select(svg.node().parentNode),
                 width = parseInt(svg.style("width")),
                 height = parseInt(svg.style("height")),
                 aspect = width / height;
-
+            console.log(container, width, height);
             // add viewBox and preserveAspectRatio properties,
             // and call resize so that svg resizes on inital page load
             svg.attr("viewBox", "0 0 " + width + " " + height)
                 .attr("perserveAspectRatio", "xMinYMid")
                 .call(resize);
 
+            console.log('!!', svg);
             // to register multiple listeners for same event type,
             // you need to add namespace, i.e., 'click.foo'
             // necessary if you call invoke this function for multiple svgs
@@ -51,21 +80,20 @@ export default (d3) => {
             }
         }
 
-        //Create SVG element
-        var svg = d3.select("#barChart")
-            .attr("width", w)
-            .attr("height", (h + 80))
-            .call(responsivefy);
-        console.log(svg);
+        scope.$watch('collection', (newVals, oldVals) => {
+            return scope.render(newVals);
+        }, true);
 
-        scope.$watchCollection('collection', (Retweets) => {
+        scope.render = (topTweets) => {
             //var modifier = {fields:{value:1}};
             //var sortModifier = Session.get('barChartSortModifier');
             //if(sortModifier && sortModifier.sort)
             //  modifier.sort = sortModifier.sort;
-
-            //var dataset = _.pluck(Retweets.find({}, {retweetCount: 1}).fetch(), 'retweetCount');
-            var dataset = Retweets.find({}, {retweetCount: 1}).fetch();
+            console.log('I\'m watching!!!');
+            //var dataset = _.pluck(topTweets.find({}, {retweetCount: 1}).fetch(), 'retweetCount');
+            var dataset = _.filter(topTweets, (tweet) => {
+                return tweet.retweetedCount;
+            });
 
             //Update scale domains
             xScale.domain(d3.range(dataset.length));
@@ -173,7 +201,7 @@ export default (d3) => {
                 .attr("x", -xScale.rangeBand())
                 .remove();
 
-        });
+        };
     }
   }
 };

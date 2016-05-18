@@ -2,10 +2,10 @@ routes.$inject = ['$stateProvider'];
 
 export default function routes($stateProvider) {
   $stateProvider
-    .state('bars', {
+    .state('app', {
       url: '/',
       template: require('./bars.html'),
-      controller: 'BarsController',
+      controller: 'BarsCtrl',
       controllerAs: 'bars'
     });
 }

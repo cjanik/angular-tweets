@@ -1,13 +1,13 @@
 import angular from 'angular';
 import uirouter from 'angular-ui-router';
 
-import BarsController from './bars.controller';
-import d3Bars from './bars.directive';
+import BarsCtrl from './bars.controller';
+import bars from './bars.directive';
 import routing from './bars.routes';
 
 
-export default angular.module('app.bars', [uirouter])
+export default angular.module('app', [uirouter])
   .config(routing)
-  .directive('d3Bars', d3Bars)
-  .controller('BarsController', BarsController)
+  .controller('BarsCtrl', BarsCtrl)
+  .directive('bars', bars)
   .name;
