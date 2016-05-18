@@ -78,7 +78,6 @@ class AppCtrl {
     if (this.listener) {
       this.listener.emit('unsubscribe', this.$scope.uuid);
       this.listener.off(this.$scope.search, tweetHandler);
-      // Retweets.remove({});
     }
     this.socket.emit('subscribeClient', { input: input, lang: 'en', clientId: this.$scope.uuid });
     // this.waitForSubscription();
@@ -102,7 +101,7 @@ class AppCtrl {
         this.$scope.topTweets.currentMinimum = tweet.retweetCount;
         this.$scope.topTweets.minimumIndex = tweet.tweetId;
       }
-      // console.log(tweet);
+
       if (tweet.retweetCount > this.$scope.topTweets.currentMinimum || this.$scope.topTweets.count < this.$scope.collectionSize) {
         let isDuplicate = _.find(this.$scope.topTweets, (dup) => {
           return dup.tweetId === tweet.tweetId;
@@ -115,26 +114,16 @@ class AppCtrl {
           this.$scope.topTweets.count++;
         }
 
-        // if (tweet.retweetCount < this.$scope.topTweets.minimumIndex) {
-        //   this.$scope.topTweets.minimumIndex = tweet.retweetCount;
-        // }
-
-
         if (this.$scope.topTweets.count > this.$scope.collectionSize) {
           delete this.$scope.topTweets[this.$scope.topTweets.minimumIndex];
-          let minTweet = _.minBy(this.$scope.topTweets, (min) => {
-            return min.retweetCount;
-          });
+
+          // this is clean but unnecessary, another data structure might be appropriate
+          let minTweet = _.sortBy(this.$scope.topTweets, ['retweetCount'])[0];
+
           this.$scope.topTweets.minimumIndex = minTweet.tweetId;
           this.$scope.topTweets.currentMinimum = minTweet.retweetCount;
           this.$scope.topTweets.count--;
         }
-         // else if (!this.$scope.topTweets.currentMinimum) {
-        //   this.$scope.topTweets.minimumIndex = minTweet.tweetId;
-        //   this.$scope.topTweets.currentMinimum = minTweet.retweetCount;
-        // }
-        console.log(this.$scope.topTweets);
-
       }
     });
     this.socket.on('error', (error) => {
