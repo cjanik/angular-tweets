@@ -3,6 +3,7 @@ import io from 'socket.io-client';
 import uirouter from 'angular-ui-router';
 import routing from './app.config';
 import bars from './bars';
+import _ from 'lodash';
 
 import '../style/app.css';
 
@@ -24,14 +25,15 @@ let app = () => {
 
 class AppCtrl {
   constructor($scope) {
-    this.$scope = $scope;
+    $scope.collectionSize = 30;
     $scope.uuid = generateUuid();
     $scope.inputError = false;
-    console.log('client id: ', $scope.uuid);
+    $scope.topTweets = { count: 0 };
+    this.$scope = $scope;
 
     this.connect();
 
-    $scope.search = (event) => {
+    $scope.executeSearch = (event) => {
       console.log('time to open the stream.');
       event.preventDefault();
 
@@ -41,6 +43,8 @@ class AppCtrl {
       if(input !== '') {
         $scope.inputError = false;
         this.getTweets(input);
+        this.$scope.query = input;
+        event.target.track.value = '';
       } else {
         $scope.inputError = 'Need to enter a proper search term';
         console.log('Need to enter a proper search term');
@@ -66,18 +70,54 @@ class AppCtrl {
   }
 
   getTweets(input) {
-
-    this.socket.emit('unsubscribe', this.$scope.uuid);
-    // Retweets.remove({});
+    if (this.listener) {
+      this.listener.emit('unsubscribe', this.$scope.uuid);
+      this.listener.off(this.$scope.search, tweetHandler);
+      // Retweets.remove({});
+    }
     this.socket.emit('subscribeClient', { input: input, lang: 'en', clientId: this.$scope.uuid });
-    event.target.track.value = '';
+    this.waitForSubscription();
     this.$scope.waitingMsg = "Not seeing much? Someone is bound to tweet about it eventually! Click a bar to see the tweet";
-    this.listen();
   }
 
-  listen() {
+  waitForSubscription() {
     this.socket.on('subscribed' + this.$scope.uuid, (success) => {
+      this.$scope.clientID = success.ID;
       console.log(success);
+      this.listen();
+    });
+  }
+
+  listen(success) {
+    console.log('listening for: ', this.$scope.query);
+    this.socket.on(this.$scope.query, (tweet) => {
+      // console.log(tweet);
+      if (tweet.retweetedCount > this.$scope.topTweets.currentMinimum || this.$scope.topTweets.count < this.$scope.collectionSize) {
+        let isDuplicate = _.find(this.$scope.topTweets, (dup) => {
+          return dup.tweetId === tweet.tweetId;
+        });
+
+        if (isDuplicate) {
+          isDuplicate.retweetedCount = tweet.retweetedCount;
+        } else {
+          this.$scope.topTweets[tweet.id] = tweet;
+          this.$scope.topTweets.count++;
+        }
+
+        if (this.$scope.topTweets.count > this.$scope.collectionSize) {
+          delete this.$scope.topTweets[this.$scope.topTweets.minimumIndex];
+          let minTweet = _.min(this.$scope.topTweets, (min) => {
+            return min.retweetedCount;
+          });
+          this.$scope.topTweets.minimumIndex = minTweet.tweetId;
+          this.$scope.topTweets.currentMinimum = minTweet.retweetedCount;
+          this.$scope.topTweets.count--;
+        }
+
+      }
+    });
+    this.socket.on('error', (error) => {
+      console.log('error: ', error);
     });
   }
 }

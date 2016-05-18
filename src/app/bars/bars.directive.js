@@ -3,7 +3,9 @@ import d3 from 'd3';
 export default (d3) => {
   return {
     restrict: 'EA',
-    scope: {},
+    scope: {
+        collection: '='
+    },
     link: function(scope, element, attrs) {
         //Width and height
         var w = 500;
@@ -56,7 +58,7 @@ export default (d3) => {
             .call(responsivefy);
         console.log(svg);
 
-        this.autorun(function(){
+        scope.$watchCollection('collection', (Retweets) => {
             //var modifier = {fields:{value:1}};
             //var sortModifier = Session.get('barChartSortModifier');
             //if(sortModifier && sortModifier.sort)

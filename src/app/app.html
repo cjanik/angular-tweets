@@ -9,12 +9,12 @@
     </div>
     <p>{{socket}}</p>
     <div class="ui input">
-      <form class="input-params" ng-submit="search($event)">
+      <form class="input-params" ng-submit="executeSearch($event)">
         Enter search term: <input type="text" name="track" placeholder="words">
         <p ng-show="inputError">{{inputError}}</p>
         <p ng-show="waitingMsg">{{waitingMsg}}</p>
       </form>
     </div>
   </header>
-  <d3Bars>Yup</d3Bars>
+  <d3Bars ng-model="topTweets">Yup</d3Bars>
 </main>
