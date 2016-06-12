@@ -1,7 +1,9 @@
 import d3 from 'd3';
+import _ from 'lodash';
 
-export default () => {
+export default ($interval) => {
   return {
+    template: require('./bars.html'),
     restrict: 'EA',
     scope: {
         collection: '='
@@ -10,16 +12,16 @@ export default () => {
 
 
         let $window = angular.element($window);
-        $window.onresize = function() {
-            scope.$apply();
-        };
+        // $window.onresize = function() {
+        //     scope.$apply();
+        // };
 
         scope.$watch(function() {
             return $window.innerWidth;
-        }, function() {
+        }, _.debounce(function() {
             // responsivefy(svg);
-            scope.render(scope.data);
-        });
+            scope.render(scope.collection);
+        }, 100));
 
         scope.$watch('data', function(newVals, oldVals) {
             return scope.render(newVals);
@@ -36,7 +38,7 @@ export default () => {
 
         //Define key function, to be used when binding data
         var key = function(d) {
-            return d._id;
+            return d.tweetId;
         };
 
         //Create SVG element
@@ -81,18 +83,14 @@ export default () => {
         }
 
         scope.$watch('collection', (newVals, oldVals) => {
+            $interval(function(){console.log('newVals:', newVals)}, 500);
             return scope.render(newVals);
         }, true);
 
         scope.render = (topTweets) => {
-            //var modifier = {fields:{value:1}};
-            //var sortModifier = Session.get('barChartSortModifier');
-            //if(sortModifier && sortModifier.sort)
-            //  modifier.sort = sortModifier.sort;
             console.log('I\'m watching!!!');
-            //var dataset = _.pluck(topTweets.find({}, {retweetCount: 1}).fetch(), 'retweetCount');
             var dataset = _.filter(topTweets, (tweet) => {
-                return tweet.retweetedCount;
+                return tweet.retweetCount;
             });
 
             //Update scale domains
@@ -118,11 +116,11 @@ export default () => {
                     return "rgb(0, 0, " + (d.retweetCount * 10) + ")";
                 })
                 .attr("data-id", function(d){
-                    return d._id;
+                    return d.tweetId;
                 })
                 .on("click", function(d){
                     document.getElementById('tweet-view').innerHTML = "";
-                    twttr.widgets.createTweet(d._id, document.getElementById('tweet-view'));
+                    twttr.widgets.createTweet(d.tweetId, document.getElementById('tweet-view'));
                     //d3.select('#tweet-view').html(d.text);
                 });
 
@@ -177,7 +175,7 @@ export default () => {
                .attr("fill", "#0F0F0F")
                .on("click", function(d){
                     document.getElementById('tweet-view').innerHTML = "";
-                    twttr.widgets.createTweet(d._id, document.getElementById('tweet-view'));
+                    twttr.widgets.createTweet(d.tweetId, document.getElementById('tweet-view'));
                 });
 
             //Update…

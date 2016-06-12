@@ -88,9 +88,7 @@ class AppCtrl {
       }
 
       if (tweet.retweetCount > this.$scope.topTweets.currentMinimum || this.$scope.topTweets.count < this.$scope.collectionSize) {
-        let isDuplicate = _.find(this.$scope.topTweets, (dup) => {
-          return dup.tweetId === tweet.tweetId;
-        });
+        let isDuplicate = tweet.tweedId in this.$scope.topTweets;
 
         if (isDuplicate) {
           isDuplicate.retweetCount = tweet.retweetCount;
