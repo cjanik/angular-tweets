@@ -10,72 +10,57 @@ export default ($interval) => {
     },
     link: function(scope, element, attrs) {
 
-
         let $window = angular.element($window);
-        // $window.onresize = function() {
-        //     scope.$apply();
-        // };
 
-        scope.$watch(function() {
-            return $window.innerWidth;
-        }, _.debounce(function() {
-            // responsivefy(svg);
-            scope.render(scope.collection);
-        }, 100));
-
-        scope.$watch('data', function(newVals, oldVals) {
-            return scope.render(newVals);
-        }, true);
         //Width and height
-        var w = 500;
-        var h = 300;
+        let w = 750;
+        let h = 400;
 
-        var xScale = d3.scale.ordinal()
+        let xScale = d3.scale.ordinal()
             .rangeRoundBands([0, w], 0.05);
 
-        var yScale = d3.scale.linear()
+        let yScale = d3.scale.linear()
             .range([0, h]);
 
         //Define key function, to be used when binding data
-        var key = function(d) {
+        let key = (d) => {
             return d.tweetId;
         };
 
         //Create SVG element
-        console.log('D3 Directive called!!');
-        var svg = d3.select('#barchart');
+        let svg = d3.select('#barchart');
 
         svg.attr("width", w)
             .attr("height", (h + 80));
 
-        // svg.call(responsivefy);
-
-        console.log(svg);
+        svg.call(responsivefy);
 
         function responsivefy(svg) {
             // get container + svg aspect ratio
-            var container = d3.select(svg.node().parentNode),
-                width = parseInt(svg.style("width")),
-                height = parseInt(svg.style("height")),
-                aspect = width / height;
-            console.log(container, width, height);
+            let container = d3.select(svg.node().parentNode),
+                svgWidth = parseInt(svg.style("width")),
+                svgHeight = parseInt(svg.style("height")),
+                aspect = svgWidth / svgHeight;
+
             // add viewBox and preserveAspectRatio properties,
             // and call resize so that svg resizes on inital page load
-            svg.attr("viewBox", "0 0 " + width + " " + height)
+            svg.attr("viewBox", "0 0 " + svgWidth + " " + svgHeight)
                 .attr("perserveAspectRatio", "xMinYMid")
                 .call(resize);
 
-            console.log('!!', svg);
+            // console.log('!!', svg);
             // to register multiple listeners for same event type,
             // you need to add namespace, i.e., 'click.foo'
             // necessary if you call invoke this function for multiple svgs
             // api docs: https://github.com/mbostock/d3/wiki/Selections#on
-            d3.select(window).on("resize." + container.attr("id"), resize);
+            d3.select(window).on("resize." + container.attr("id"), _.debounce(resize, 100));
 
             // get width of container and resize svg to fit it
             function resize() {
-                var targetWidth = parseInt(container.style("width"));
-
+                let targetWidth = parseInt(container.style("width"));
+                if (isNaN(targetWidth)) {
+                    return;
+                }
                 targetWidth = targetWidth > 500 ? 500 : targetWidth;
                 svg.attr("width", targetWidth);
                 svg.attr("height", Math.round(targetWidth / aspect));
@@ -83,13 +68,15 @@ export default ($interval) => {
         }
 
         scope.$watch('collection', (newVals, oldVals) => {
-            $interval(function(){console.log('newVals:', newVals)}, 500);
+            $interval(function(){
+                //console.log('newVals:', newVals)
+            }, 500);
             return scope.render(newVals);
         }, true);
 
         scope.render = (topTweets) => {
-            console.log('I\'m watching!!!');
-            var dataset = _.filter(topTweets, (tweet) => {
+
+            let dataset = _.filter(topTweets, (tweet) => {
                 return tweet.retweetCount;
             });
 
@@ -98,30 +85,30 @@ export default ($interval) => {
             yScale.domain([0, d3.max(dataset, function(d) { return d.retweetCount; })]);
 
             //Select…
-            var bars = svg.selectAll("rect")
+            let bars = svg.selectAll("rect")
                 .data(dataset, key);
 
             //Enter…
             bars.enter()
                 .append("rect")
                 .attr("x", w)
-                .attr("y", function(d) {
+                .attr("y", (d) => {
                     return h + 70 - yScale(d.retweetCount);
                 })
                 .attr("width", xScale.rangeBand())
-                .attr("height", function(d) {
+                .attr("height", (d) => {
                     return yScale(d.retweetCount);
                 })
-                .attr("fill", function(d) {
+                .attr("fill", (d) => {
                     return "rgb(0, 0, " + (d.retweetCount * 10) + ")";
                 })
-                .attr("data-id", function(d){
+                .attr("data-id", (d) =>{
                     return d.tweetId;
                 })
-                .on("click", function(d){
+                .on("click", (d) =>{
                     document.getElementById('tweet-view').innerHTML = "";
                     twttr.widgets.createTweet(d.tweetId, document.getElementById('tweet-view'));
-                    //d3.select('#tweet-view').html(d.text);
+                    // d3.select('#tweet-view').html(d.text);
                 });
 
             //Update…
@@ -155,7 +142,7 @@ export default ($interval) => {
             //Update all labels
 
             //Select…
-            var labels = svg.selectAll("text")
+            let labels = svg.selectAll("text")
                 .data(dataset, key);
 
             //Enter…

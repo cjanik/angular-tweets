@@ -1,9 +1,10 @@
 import io from 'socket.io-client';
+import {generateUuid} from './utils';
 
 class AppCtrl {
   constructor($scope) {
     $scope.collectionSize = 30;
-    $scope.uuid = this.generateUuid();
+    $scope.uuid = generateUuid();
     $scope.inputError = false;
     $scope.topTweets = {
       count: 0
@@ -31,15 +32,6 @@ class AppCtrl {
 
       return false;
     }
-  }
-
-    generateUuid() {
-    var d = new Date().getTime();
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      d = Math.floor(d/16);
-      var r = (d + Math.random()*16)%16 | 0;
-      return (c == 'x' ? r : (r&0x3|0x8)).toString(16);
-    });
   }
 
   connect() {
@@ -79,8 +71,6 @@ class AppCtrl {
   listen(success) {
     console.log('listening for: ', this.$scope.query);
     this.socket.on(this.$scope.query, (tweet) => {
-
-      console.log(tweet);
 
       if (typeof this.$scope.topTweets.currentMinimum === 'undefined') {
         this.$scope.topTweets.currentMinimum = tweet.retweetCount;

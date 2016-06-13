@@ -23,4 +23,10 @@ footer {
 
 svg#barchart {
   background-color: #fff;
+  display: block;
+  margin: 10px auto;
+}
+
+bars {
+  width: 100%;
 }
