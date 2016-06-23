@@ -12,7 +12,8 @@ var TwitterStreamChannels = require('twitter-stream-channels'),
   lastUpdated = (new Date).getTime(),
   rateLimit = false,
   lang = 'en',
-  tweetStream;
+  tweetStream,
+  MAX_CLIENTS = 30;
 
 server.listen(5080);
 
@@ -45,47 +46,73 @@ function subscribeHandler(data) {
   let socket = this;
   socket.emit('subscribed' + data.clientId, { data: 'success' });
 
+  addToTrack(data.clientId, data.input);
+
   setInterval(() => {
-    console.log('emitting test on: ', data.input);
-    socket.emit(data.input, {
-      tweetId: Math.floor(Math.random()*300).toString(),
-      retweetId: Math.floor(Math.random()*50).toString(),
+    handleTweets(data.clientId, socket, {
+      id_str: Math.floor(Math.random()*31011).toString(),
       text: "just another test",
-      retweetCount: Math.floor(Math.random()*100)
-    });
+      retweeted_status: {
+        retweet_count: Math.floor(Math.random()*100),
+        id_str: Math.floor(Math.random()*5101).toString()
+      }
+    }, data.input);
   }, 500);
 
-  // addToTrack(data.clientId, data.input);
 
   // tweetStream.on('channels/' + data.clientId, (twt) => {
-  //   setListener(socket, twt, data.input);
+  //   handleTweets(data.clientId, socket, twt, data.input);
   // });
 
   // tweetStream.on('error', (error) => {
-
   //   socket.emit('error', error);
   //   console.log('error: ', error);
   // });
 
 }
 
-function setListener(socket, twt, query) {
-  if(twt.retweeted_status){
+function handleTweets(subscriber, socket, twt, query) {
+  // Manage client tweet Map and emit additions and deletions
+  if (twt.retweeted_status) {
+    let clientUpdates = {};
+
+    if (clients[subscriber].tweetMap.size < MAX_CLIENTS
+      || twt.retweeted_status.retweet_count > clients[subscriber].minTweet.retweeted_status.retweet_count
+    ) {
+      clients[subscriber].tweetMap.set(twt.id_str, twt);
+      clientUpdates.add = twt;
+    }
+    if (clients[subscriber].tweetMap.size > MAX_CLIENTS) {
+      clients[subscriber].tweetMap.delete(clients[subscriber].minTweet.id_str);
+      clientUpdates.remove = clients[subscriber].minTweet.id_str;
+    }
+    if (clients[subscriber].tweetMap.size === MAX_CLIENTS) {
+      clients[subscriber].minTweet = getMinTweet(subscriber);
+    }
+
     console.log(twt.text);
-    socket.emit(query,
-      { tweetId: twt.id_str,
-        retweetId: twt.retweeted_status.id_str,
-        text: twt.text,
-        retweetCount: twt.retweeted_status.retweet_count
-      }
-    );
+    if (clientUpdates.add) {
+      console.log('emitting test on: ', query);
+      socket.emit(query, clientUpdates);
+    }
   }
+}
+
+function getMinTweet(subscriber) {
+  let minTweet = null;
+  for( let value of clients[subscriber].tweetMap.values()) {
+    if (!minTweet || value.retweeted_status.retweet_count < minTweet.retweeted_status.retweet_count) {
+      minTweet = value;
+    }
+  }
+  return minTweet;
 }
 
 function addToTrack(subscriber, track) {
   channels[subscriber] = Array(track);
+  clients[subscriber] = { tweetMap: new Map() };
   console.log('channels: ', channels);
-  updateTwit();
+  // updateTwit();
 }
 
 function updateTwit() {
@@ -94,23 +121,23 @@ function updateTwit() {
     console.log('now: ', now, ' lastUpdated: ', lastUpdated);
 
   if (now - lastUpdated > 5000 && rateLimit === false) {
-    tweetStream = Twit.streamChannels( {track: channels, language: 'en'} );
+    tweetStream = Twit.streamChannels({ track: channels, language: 'en' });
     console.log(tweetStream);
     console.log('updated, no rateLimit: ', now - lastUpdated);
     lastUpdated = now;
     updated = true;
-  } else if (rateLimit === true && now - lastUpdated > 60000) {
 
-    tweetStream = Twit.streamChannels( {track: channels, language: 'en'} );
+  } else if (rateLimit === true && now - lastUpdated > 60000) {
+    tweetStream = Twit.streamChannels({ track: channels, language: 'en' });
     console.log('updated, after rateLimit', now - lastUpdated);
     lastUpdated = now;
     rateLimit = false;
     updated = true;
   }
 
-  if (!updated){
-    setTimeout(updateTwit, 3000);
-  } else{
+  if (!updated) {
+    setTimeout(updateTwit, 5000);
+  } else {
     return true;
   }
 
@@ -119,7 +146,7 @@ function updateTwit() {
 // close stream after 15 minutes
 var closeChecker = setInterval(() => {
   if ((new Date).getTime() - lastUpdated > 60 * 1000 * 15) {
-    tweetStream.stop();
+      tweetStream.stop();
     clearInterval(closeChecker);
   }
 }, 60 * 1000);

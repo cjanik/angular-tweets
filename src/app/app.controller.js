@@ -6,9 +6,7 @@ class AppCtrl {
     $scope.collectionSize = 30;
     $scope.uuid = generateUuid();
     $scope.inputError = false;
-    $scope.topTweets = {
-      count: 0
-    };
+    $scope.topTweets = {};
     this.$scope = $scope;
 
     this.connect();
@@ -70,34 +68,16 @@ class AppCtrl {
 
   listen(success) {
     console.log('listening for: ', this.$scope.query);
-    this.socket.on(this.$scope.query, (tweet) => {
+    this.socket.on(this.$scope.query, (update) => {
+      console.log('got ', update);
 
-      if (typeof this.$scope.topTweets.currentMinimum === 'undefined') {
-        this.$scope.topTweets.currentMinimum = tweet.retweetCount;
-        this.$scope.topTweets.minimumIndex = tweet.tweetId;
+      if (update.add) {
+        this.$scope.topTweets[update.add.id_str] = update.add;
+      }
+      if (update.remove) {
+        delete this.$scope.topTweets[update.remove];
       }
 
-      if (tweet.retweetCount > this.$scope.topTweets.currentMinimum || this.$scope.topTweets.count < this.$scope.collectionSize) {
-        let isDuplicate = tweet.tweedId in this.$scope.topTweets;
-
-        if (isDuplicate) {
-          isDuplicate.retweetCount = tweet.retweetCount;
-        } else {
-          this.$scope.topTweets[tweet.tweetId] = tweet;
-          this.$scope.topTweets.count++;
-        }
-
-        if (this.$scope.topTweets.count > this.$scope.collectionSize) {
-          delete this.$scope.topTweets[this.$scope.topTweets.minimumIndex];
-
-          // this is clean but unnecessary, another data structure might be appropriate
-          let minTweet = _.sortBy(this.$scope.topTweets, ['retweetCount'])[0];
-
-          this.$scope.topTweets.minimumIndex = minTweet.tweetId;
-          this.$scope.topTweets.currentMinimum = minTweet.retweetCount;
-          this.$scope.topTweets.count--;
-        }
-      }
     });
     this.socket.on('error', (error) => {
       console.log('error: ', error);

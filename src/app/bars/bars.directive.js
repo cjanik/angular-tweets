@@ -75,14 +75,14 @@ export default ($interval) => {
         }, true);
 
         scope.render = (topTweets) => {
-
+            console.log('say wha? ', topTweets);
             let dataset = _.filter(topTweets, (tweet) => {
-                return tweet.retweetCount;
+                return tweet.retweeted_status.retweet_count;
             });
 
             //Update scale domains
             xScale.domain(d3.range(dataset.length));
-            yScale.domain([0, d3.max(dataset, function(d) { return d.retweetCount; })]);
+            yScale.domain([0, d3.max(dataset, function(d) { return d.retweeted_status.retweet_count; })]);
 
             //Select…
             let bars = svg.selectAll("rect")
