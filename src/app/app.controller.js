@@ -3,7 +3,6 @@ import {generateUuid} from './utils';
 
 class AppCtrl {
   constructor($scope) {
-    $scope.collectionSize = 30;
     $scope.uuid = generateUuid();
     $scope.inputError = false;
     $scope.topTweets = {};
