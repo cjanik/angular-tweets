@@ -24,7 +24,7 @@ export default ($interval) => {
 
         //Define key function, to be used when binding data
         let key = (d) => {
-            return d.tweetId;
+            return d.id_str;
         };
 
         //Create SVG element
@@ -93,21 +93,21 @@ export default ($interval) => {
                 .append("rect")
                 .attr("x", w)
                 .attr("y", (d) => {
-                    return h + 70 - yScale(d.retweetCount);
+                    return h + 70 - yScale(d.retweeted_status.retweet_count);
                 })
                 .attr("width", xScale.rangeBand())
                 .attr("height", (d) => {
-                    return yScale(d.retweetCount);
+                    return yScale(d.retweeted_status.retweet_count);
                 })
                 .attr("fill", (d) => {
-                    return "rgb(0, 0, " + (d.retweetCount * 10) + ")";
+                    return "rgb(0, 0, " + (d.retweeted_status.retweet_count * 10) + ")";
                 })
                 .attr("data-id", (d) =>{
-                    return d.tweetId;
+                    return d.id_str;
                 })
                 .on("click", (d) =>{
                     document.getElementById('tweet-view').innerHTML = "";
-                    twttr.widgets.createTweet(d.tweetId, document.getElementById('tweet-view'));
+                    twttr.widgets.createTweet(d.id_str, document.getElementById('tweet-view'));
                     // d3.select('#tweet-view').html(d.text);
                 });
 
@@ -121,13 +121,13 @@ export default ($interval) => {
                     return xScale(i);
                 })
                 .attr("y", function(d) {
-                    return h + 70 - yScale(d.retweetCount);
+                    return h + 70 - yScale(d.retweeted_status.retweet_count);
                 })
                 .attr("width", xScale.rangeBand())
                 .attr("height", function(d) {
-                    return yScale(d.retweetCount);
+                    return yScale(d.retweeted_status.retweet_count);
                 }).attr("fill", function(d) {
-                    return "rgb(0, 0, " + (d.retweetCount * 10) + ")";
+                    return "rgb(0, 0, " + (d.retweeted_status.retweet_count * 10) + ")";
                 });
 
             //Exit…
@@ -149,13 +149,13 @@ export default ($interval) => {
             labels.enter()
                 .append("text")
                 .text(function(d) {
-                    return d.retweetCount;
+                    return d.retweeted_status.retweet_count;
                 })
                 .attr("text-anchor", "end")
                 .style("writing-mode", "tb")
                 .attr("x", w)
                 .attr("y", function(d) {
-                    return h - yScale(d.retweetCount) - 100;
+                    return h - yScale(d.retweeted_status.retweet_count) - 100;
                 })
                .attr("font-family", "sans-serif")
                .attr("font-size", "18px")
@@ -174,9 +174,9 @@ export default ($interval) => {
                 .attr("x", function(d, i) {
                     return xScale(i) + xScale.rangeBand() / 2;
                 }).attr("y", function(d) {
-                    return h - yScale(d.retweetCount) + 75;
+                    return h - yScale(d.retweeted_status.retweet_count) + 75;
                 }).text(function(d) {
-                    return d.retweetCount;
+                    return d.retweeted_status.retweet_count;
                 });
 
             //Exit…
