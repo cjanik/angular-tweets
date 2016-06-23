@@ -9,7 +9,19 @@ class AppCtrl {
     $scope.topTweets = {};
     this.$scope = $scope;
 
-    this.connect();
+    const socketCallback = (data) => {
+      this.$scope.socket = data;
+      this.socket.emit('my other event', { my: 'jello' });
+    };
+
+    let connectPromise = new Promise((resolve, reject) => {
+      this.socket = io('http://localhost:5080')
+        .on('news', (data) => {
+          resolve(data);
+        });
+    });
+
+    connectPromise.then(socketCallback);
 
     $scope.executeSearch = (event) => {
       console.log('time to open the stream.');
@@ -30,21 +42,6 @@ class AppCtrl {
 
       return false;
     }
-  }
-
-  connect() {
-    this.socket = io('http://localhost:5080');
-
-    let socketCallback = (data) => {
-      this.$scope.socket = data;
-      this.socket.emit('my other event', { my: 'data' });
-    };
-
-    this.socket.on('news', (data) => {
-      this.$scope.$apply(() => {
-        socketCallback(data);
-      });
-    });
   }
 
   getTweets(input) {
